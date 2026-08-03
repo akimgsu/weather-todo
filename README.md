@@ -1,56 +1,60 @@
-# Welcome to your Expo app 👋
+# 📝 나의 첫 메모장 (Weather Todo App)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+이 프로젝트는 React Native 생태계의 최신 기술(Expo Router, Firebase, Location API)을 활용하여 만든 실시간 날씨 기반 메모장 앱입니다. 
+앱을 껐다 켜도 데이터가 영구적으로 유지되며, 현재 내 위치의 날씨를 자동으로 불러옵니다.
 
-## Get started
+## 🚀 사용된 핵심 기술 및 개념 정리
 
-1. Install dependencies
+### 1. 프론트엔드와 클라우드 공장: Expo & EAS
+**Q: Expo와 EAS는 무슨 역할을 하나요?**
+* **Expo**: 복잡한 모바일 앱 개발을 웹 개발처럼 쉽게 만들어주는 프레임워크입니다. 앱의 눈에 보이는 껍데기와 로직(프론트엔드)을 담당합니다.
+* **EAS (Expo Application Services)**: 내가 짠 코드를 스마트폰에 직접 설치할 수 있는 진짜 앱 파일(`.apk`, `.ipa`)로 번역하고 포장해 주는 **'클라우드 공장'**입니다.
 
-   ```bash
-   npm install
-   ```
+**Q: Expo(EAS) 없이 앱을 빌드할 수 있나요?**
+* 네, 당연히 가능합니다(로컬 빌드). 하지만 내 컴퓨터에 Android Studio, Java 등 무거운 프로그램을 일일이 설치하고 세팅해야 하며, 특히 아이폰 앱은 비싼 Mac 컴퓨터가 없으면 아예 만들 수조차 없습니다. EAS는 이 모든 번거로운 기계 장비와 인프라를 클라우드에서 대신 해결해 줍니다.
 
-2. Start the app
+**Q: Expo는 어떻게 돈을 버나요? (수익 모델)**
+* 코딩 도구는 평생 무료입니다. 하지만 대기업이나 수많은 개발자가 빠르게 앱을 배포하기 위해 '클라우드 빌드 공장(EAS)'을 하루에도 수십 번씩 돌리려면, 대기열(Queue) 없이 고속으로 공장을 쓸 수 있는 'VIP 유료 멤버십'을 결제해야 합니다.
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+### 2. 백엔드와 데이터 창고: Firebase
+**Q: Firebase의 역할은 무엇인가요?**
+* 앱을 끄면 폰 메모리에 있던 휘발성 데이터는 모두 날아갑니다. Firebase는 이 메모들을 영구적으로 안전하게 보관해 주는 구글의 **'클라우드 데이터 창고(백엔드 서버)'**입니다. 
+* 실시간 동기화(`onSnapshot`)를 통해 폰, 태블릿, PC 등 어디서든 똑같은 메모를 즉시 볼 수 있습니다.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+**Q: 메모장을 A, B, C가 쓰면 각각 따로 저장되나요? (로그인을 안 넣었는데?)**
+* 아닙니다. 현재 이 앱은 **로그인 기능(인증)**이 없기 때문에, 전 세계 사람이 다 같이 쓰는 **'실시간 공용 게시판(단톡방)'**으로 작동합니다. A가 글을 쓰면 B와 C의 화면에도 실시간으로 나타나고, 누군가 지우면 다 같이 지워집니다.
+* 나만의 메모장으로 만들려면 Firebase Authentication(인증) 기능을 붙여서 유저가 글을 쓸 때마다 각자의 고유 ID(주민등록번호) 꼬리표를 달아서 데이터를 분리해야 합니다.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+**Q: Firebase는 어떻게 돈을 버나요? (수익 모델)**
+* 부분 유료화(Freemium) 모델입니다. 처음엔 넉넉하게 무료로 퍼주어 개발자들의 프로젝트를 유치하고 락인(Lock-in) 시킵니다. 앱이 대박 나서 유저가 수십만 명이 되면 그때부터 데이터베이스를 '사용한 만큼만 돈을 내는(Pay-as-you-go)' 구조로 엄청난 서버 유지비 수익을 창출합니다.
 
-## Get a fresh project
+---
 
-When you're ready, run:
+### 3. 위치 기반 무료 날씨: Open-Meteo & Expo Location
+* **Expo Location**: 사용자의 스마트폰 GPS 센서에 접근하기 위해 권한을 요청하고, 내 위치의 위도/경도를 추출하여 동네 이름(역지오코딩)으로 변환하는 도구입니다.
+* **Open-Meteo API**: 회원가입이나 복잡한 API 키 발급 과정 없이, 위도와 경도만 넘겨주면 누구나 100% 무료로 사용할 수 있는 훌륭한 날씨 데이터 제공 서비스입니다.
 
+## 🛠️ 앱 실행 및 안드로이드(.apk) 빌드 방법
+
+### 1. 로컬 환경에서 테스트하기
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. 안드로이드 실제 폰에 설치하기 (APK 빌드)
+EAS(클라우드 공장)를 이용해 내 폰에 바로 깔 수 있는 안드로이드 설치 파일을 생성합니다.
 
-### Other setup steps
+```bash
+# 1. 빌드 도구 설치 (최초 1회)
+npm install -g eas-cli
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+# 2. Expo 계정 로그인
+eas login
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+# 3. APK 빌드 시작 (클라우드에서 약 5~10분 소요)
+eas build -p android --profile preview
+```
+빌드가 완료되면 터미널에 나타나는 **QR 코드**나 **다운로드 주소(URL)**를 폰에서 열어 진짜 안드로이드 앱을 폰에 설치할 수 있습니다!
