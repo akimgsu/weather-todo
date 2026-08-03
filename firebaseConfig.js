@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 
-// .env 파일에 작성하신 변수들을 불러옵니다.
+// Load variables from .env file
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -12,8 +12,8 @@ const firebaseConfig = {
   measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Firebase 앱 시작
+// Initialize Firebase App
 const app = initializeApp(firebaseConfig);
 
-// Firestore(데이터베이스) 기능 시작 후 내보내기 (다른 파일에서 쓸 수 있게 함)
+// Initialize Cloud Firestore and export it
 export const db = getFirestore(app);

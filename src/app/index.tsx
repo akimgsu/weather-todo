@@ -1,19 +1,20 @@
 import { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
-// ⭐️ Firebase Firestore(데이터베이스) 함수들 불러오기
+// ⭐️ Import Firebase Firestore functions
 import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
-// 상대 경로에 주의해서 firebaseConfig를 불러옵니다 (src/app 폴더의 밖의 밖)
+// Import firebaseConfig (pay attention to relative path)
 import { db } from '../../firebaseConfig';
+import Weather from '../components/Weather'; // 🌤️ Import Weather component
 
 export default function IndexScreen() {
-  const [memos, setMemos] = useState([]); // 메모 리스트 상태
-  const [inputText, setInputText] = useState(''); // 입력창 텍스트 상태
-  const [loading, setLoading] = useState(true); // 로딩 상태
+  const [memos, setMemos] = useState([]); // Memo list state
+  const [inputText, setInputText] = useState(''); // Input text state
+  const [loading, setLoading] = useState(true); // Loading state
 
-  // 1. 메모 불러오기 (실시간 감지)
+  // 1. Fetch memos (real-time listener)
   useEffect(() => {
     const q = query(collection(db, 'memos'), orderBy('createdAt', 'desc'));
-    
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const newMemos = snapshot.docs.map((doc) => ({
         id: doc.id,
@@ -26,41 +27,43 @@ export default function IndexScreen() {
     return () => unsubscribe();
   }, []);
 
-  // 2. 메모 추가하기 (클라우드 저장)
+  // 2. Add memo (save to cloud)
   const addMemo = async () => {
     if (inputText.trim() === '') return;
-    
+
     await addDoc(collection(db, 'memos'), {
       text: inputText,
       createdAt: new Date(),
     });
-    
+
     setInputText('');
   };
 
-  // 3. 메모 삭제하기 (클라우드 삭제)
+  // 3. Delete memo (delete from cloud)
   const deleteMemo = async (id) => {
     await deleteDoc(doc(db, 'memos', id));
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>📝 나의 첫 메모장</Text>
-      
-      {/* 메모 입력 영역 */}
+      <Text style={styles.title}>📝 Memo</Text>
+
+      <Weather />
+
+      {/* Memo input area */}
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder="오늘의 메모를 남겨보세요..."
+          placeholder="Leave a memo for today..."
           value={inputText}
           onChangeText={setInputText}
         />
         <TouchableOpacity style={styles.addButton} onPress={addMemo}>
-          <Text style={styles.addButtonText}>등록</Text>
+          <Text style={styles.addButtonText}>Add</Text>
         </TouchableOpacity>
       </View>
 
-      {/* 리스트 출력 영역 */}
+      {/* List display area */}
       {loading ? (
         <ActivityIndicator size="large" color="#007BFF" />
       ) : (
