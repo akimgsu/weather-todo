@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function AuthScreen() {
   const [email, setEmail] = useState('');
@@ -41,108 +42,173 @@ export default function AuthScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>🔐 {isSignUp ? 'Create Account' : 'Welcome Back'}</Text>
-      <Text style={styles.subtitle}>
-        {isSignUp ? 'Sign up to start saving your private memos' : 'Sign in to access your memos'}
-      </Text>
-
-      {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-
-      <TextInput
-        style={styles.input}
-        placeholder="Email address"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-
-      <TouchableOpacity style={styles.button} onPress={handleAuth} disabled={loading}>
-        {loading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <Text style={styles.buttonText}>{isSignUp ? 'Sign Up' : 'Sign In'}</Text>
-        )}
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => { setIsSignUp(!isSignUp); setErrorMessage(''); }}>
-        <Text style={styles.toggleText}>
-          {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+      style={styles.wrapper}
+    >
+      <View style={styles.container}>
+        <View style={styles.iconContainer}>
+          <Ionicons name="cloudy-night-outline" size={60} color="#4F46E5" />
+        </View>
+        <Text style={styles.title}>{isSignUp ? 'Create Account' : 'Welcome Back'}</Text>
+        <Text style={styles.subtitle}>
+          {isSignUp ? 'Sign up to start saving your private memos' : 'Sign in to access your weather & memos'}
         </Text>
-      </TouchableOpacity>
-    </View>
+
+        {errorMessage ? (
+          <View style={styles.errorContainer}>
+            <Ionicons name="alert-circle-outline" size={20} color="#DC2626" />
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          </View>
+        ) : null}
+
+        <View style={styles.inputContainer}>
+          <Ionicons name="mail-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Email address"
+            placeholderTextColor="#9CA3AF"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="#9CA3AF"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+        </View>
+
+        <TouchableOpacity style={styles.button} onPress={handleAuth} disabled={loading}>
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.buttonText}>{isSignUp ? 'Sign Up' : 'Sign In'}</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => { setIsSignUp(!isSignUp); setErrorMessage(''); }} style={styles.toggleContainer}>
+          <Text style={styles.toggleText}>
+            {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
+            <Text style={styles.toggleTextBold}>{isSignUp ? 'Sign In' : 'Sign Up'}</Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    justifyContent: 'center',
+    width: '100%',
+  },
   container: {
-    backgroundColor: 'white',
-    padding: 24,
-    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    padding: 32,
+    borderRadius: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    marginTop: 20,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 20,
+    elevation: 4,
+    width: '100%',
+  },
+  iconContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
   },
   title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 6,
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#111827',
+    marginBottom: 8,
     textAlign: 'center',
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 20,
+    fontSize: 15,
+    color: '#6B7280',
+    marginBottom: 32,
     textAlign: 'center',
+    lineHeight: 22,
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
   },
   errorText: {
-    color: '#D32F2F',
-    backgroundColor: '#FFEBEE',
-    padding: 10,
-    borderRadius: 6,
-    marginBottom: 12,
-    fontSize: 13,
-    textAlign: 'center',
+    color: '#DC2626',
+    fontSize: 14,
+    marginLeft: 8,
+    fontWeight: '500',
+    flex: 1,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 16,
+    marginBottom: 16,
+    paddingHorizontal: 16,
+    height: 56,
+  },
+  inputIcon: {
+    marginRight: 12,
   },
   input: {
-    backgroundColor: '#F9F9F9',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    padding: 14,
-    fontSize: 15,
-    marginBottom: 12,
+    flex: 1,
+    fontSize: 16,
+    color: '#111827',
+    height: '100%',
   },
   button: {
-    backgroundColor: '#007BFF',
-    padding: 14,
-    borderRadius: 8,
+    backgroundColor: '#4F46E5',
+    height: 56,
+    borderRadius: 16,
     alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 16,
+    justifyContent: 'center',
+    marginTop: 12,
+    marginBottom: 24,
+    shadowColor: '#4F46E5',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
   },
   buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontWeight: '700',
     fontSize: 16,
+    letterSpacing: 0.5,
+  },
+  toggleContainer: {
+    alignItems: 'center',
+    paddingVertical: 8,
   },
   toggleText: {
-    color: '#007BFF',
-    textAlign: 'center',
+    color: '#6B7280',
     fontSize: 14,
-    fontWeight: '500',
+  },
+  toggleTextBold: {
+    color: '#4F46E5',
+    fontWeight: '700',
   },
 });

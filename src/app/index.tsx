@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, ActivityIndicator, KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
 import { collection, addDoc, onSnapshot, query, where, deleteDoc, doc } from 'firebase/firestore';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { db, auth } from '../../firebaseConfig';
+import { Ionicons } from '@expo/vector-icons';
 import Weather from '../components/Weather';
 import AuthScreen from '../components/AuthScreen';
 
@@ -81,151 +82,245 @@ export default function IndexScreen() {
   if (authLoading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" color="#007BFF" />
+        <ActivityIndicator size="large" color="#4F46E5" />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>📝 Memo</Text>
-      <Weather />
-
-      {!user ? (
-        <AuthScreen />
-      ) : (
-        <>
-          {/* User info bar */}
-          <View style={styles.userHeader}>
-            <Text style={styles.userEmail} numberOfLines={1}>👤 {user.email}</Text>
-            <TouchableOpacity style={styles.logoutButton} onPress={() => signOut(auth)}>
-              <Text style={styles.logoutText}>Sign Out</Text>
-            </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        {!user ? (
+          <View style={styles.authWrapper}>
+            <AuthScreen />
           </View>
-
-          {/* Memo input area */}
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="To do a memo..."
-              value={inputText}
-              onChangeText={setInputText}
-            />
-            <TouchableOpacity style={styles.addButton} onPress={addMemo}>
-              <Text style={styles.addButtonText}>Add</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* List display area */}
-          {loading ? (
-            <ActivityIndicator size="large" color="#007BFF" />
-          ) : (
-            <FlatList
-              data={memos}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <View style={styles.memoItem}>
-                  <Text style={styles.memoText}>{item.text}</Text>
-                  <TouchableOpacity onPress={() => deleteMemo(item.id)}>
-                    <Text style={styles.deleteText}>❌</Text>
-                  </TouchableOpacity>
+        ) : (
+          <>
+            {/* Header */}
+            <View style={styles.headerContainer}>
+              <View style={styles.headerLeft}>
+                <View style={styles.avatar}>
+                  <Ionicons name="person" size={16} color="#4F46E5" />
                 </View>
-              )}
-            />
-          )}
-        </>
-      )}
-    </View>
+                <View>
+                  <Text style={styles.greetingText}>Hello,</Text>
+                  <Text style={styles.userEmail} numberOfLines={1}>{user.email?.split('@')[0]}</Text>
+                </View>
+              </View>
+              <TouchableOpacity style={styles.logoutIconButton} onPress={() => signOut(auth)}>
+                <Ionicons name="log-out-outline" size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            <Weather />
+
+            <View style={styles.listHeaderContainer}>
+              <Text style={styles.listTitle}>My Tasks</Text>
+              <Text style={styles.listCount}>{memos.length} items</Text>
+            </View>
+
+            {/* List display area */}
+            {loading ? (
+              <View style={styles.centerContent}>
+                <ActivityIndicator size="large" color="#4F46E5" />
+              </View>
+            ) : (
+              <FlatList
+                data={memos}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.listContent}
+                renderItem={({ item }) => (
+                  <View style={styles.memoItem}>
+                    <TouchableOpacity style={styles.checkboxPlaceholder}>
+                      <Ionicons name="ellipse-outline" size={24} color="#D1D5DB" />
+                    </TouchableOpacity>
+                    <Text style={styles.memoText}>{item.text}</Text>
+                    <TouchableOpacity onPress={() => deleteMemo(item.id)} style={styles.deleteButton}>
+                      <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                    </TouchableOpacity>
+                  </View>
+                )}
+                ListEmptyComponent={
+                  <View style={styles.emptyContainer}>
+                    <Ionicons name="document-text-outline" size={48} color="#D1D5DB" />
+                    <Text style={styles.emptyText}>No tasks yet. Add one below!</Text>
+                  </View>
+                }
+              />
+            )}
+
+            {/* Memo input area */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="What do you need to do?"
+                placeholderTextColor="#9CA3AF"
+                value={inputText}
+                onChangeText={setInputText}
+              />
+              <TouchableOpacity
+                style={[styles.addButton, inputText.trim() === '' && styles.addButtonDisabled]}
+                onPress={addMemo}
+                disabled={inputText.trim() === ''}
+              >
+                <Ionicons name="arrow-up" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F3F4F6', // Gray-100
+  },
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
-    paddingTop: 60,
     paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'android' ? 20 : 0,
+  },
+  authWrapper: {
+    flex: 1,
+    justifyContent: 'center',
   },
   centerContent: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  userHeader: {
+  headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#E8EAF6',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
+    marginBottom: 24,
+    marginTop: 10,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E0E7FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  greetingText: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
   },
   userEmail: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#3F51B5',
-    flex: 1,
-    marginRight: 10,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
   },
-  logoutButton: {
-    backgroundColor: '#FF5252',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
+  logoutIconButton: {
+    padding: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  logoutText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    marginBottom: 20,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: 'white',
-    padding: 15,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    marginRight: 10,
-  },
-  addButton: {
-    backgroundColor: '#007BFF',
-    padding: 15,
-    borderRadius: 10,
-    justifyContent: 'center',
-  },
-  addButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  memoItem: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
-    marginBottom: 10,
+  listHeaderContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginBottom: 16,
+  },
+  listTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#111827',
+  },
+  listCount: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '600',
+  },
+  listContent: {
+    paddingBottom: 20,
+  },
+  memoItem: {
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 1,
+  },
+  checkboxPlaceholder: {
+    marginRight: 12,
   },
   memoText: {
     fontSize: 16,
     flex: 1,
+    color: '#374151',
+    lineHeight: 22,
   },
-  deleteText: {
+  deleteButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    marginTop: 12,
+    color: '#9CA3AF',
     fontSize: 16,
-    paddingLeft: 10,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 8,
+    borderRadius: 32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 10,
+    marginBottom: Platform.OS === 'ios' ? 10 : 20,
+    marginTop: 10,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: '#111827',
+    paddingHorizontal: 16,
+    height: 50,
+  },
+  addButton: {
+    backgroundColor: '#4F46E5',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addButtonDisabled: {
+    backgroundColor: '#9CA3AF',
   },
 });
