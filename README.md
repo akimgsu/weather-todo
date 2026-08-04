@@ -58,7 +58,7 @@ eas build -p android --profile production
 ### 1. 프론트엔드와 클라우드 공장: Expo & EAS
 - **Expo**: React Native 기반 멀티플랫폼 모바일 앱 개발 프레임워크.
 - **EAS (Expo Application Services)**: 작성한 코드를 스마트폰 설치 파일(`.apk`, `.ipa`, `.aab`)로 빌드해 주는 클라우드 자동화 공장.
-- **.easignore 보안 세팅**: `.gitignore`로 비밀키(`.env`)를 보호하면서도 EAS 빌드 시 클라우드 공장에는 `.env`가 정상 전달되도록 `.easignore` 구성.
+- **Expo Extra Config**: `app.json`의 `extra.firebase` 필드를 통해 공개용 클라이언트 접속 세팅을 관리. `.easignore`나 복잡한 `.env` 주입 과정 없이 로컬/EAS 빌드 100% 호환.
 
 ### 2. 백엔드와 인증: Firebase (Firestore & Auth)
 - **Firestore**: NoSQL 클라우드 데이터베이스.
@@ -76,7 +76,7 @@ eas build -p android --profile production
 ```text
 weather-todo/
 ├── assets/images/       # 커스텀 3D 앱 아이콘
-├── firebaseConfig.js    # Firebase DB & Auth 설정
+├── firebaseConfig.js    # Firebase DB & Auth 설정 (expo-constants 기반)
 ├── src/
 │   ├── app/
 │   │   ├── _layout.tsx  # 메인 레이아웃 (Stack)
@@ -84,9 +84,7 @@ weather-todo/
 │   └── components/
 │       ├── AuthScreen.tsx # 로그인 / 회원가입 컴포넌트
 │       └── Weather.tsx    # 날씨 및 섭씨/화씨 토글 컴포넌트
-├── .easignore           # EAS 빌드 환경변수 포함 설정
-├── .env                 # 비밀키 보안 파일
-├── app.json             # 앱 명세 및 패키지 세팅
+├── app.json             # 앱 명세, 패키지 및 Firebase Extra 설정
 └── README.md            # 기술 명세 문서
 ```
 

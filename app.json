@@ -43,6 +43,15 @@
       "router": {},
       "eas": {
         "projectId": "21ef8f6d-79b8-4b61-92c0-965f0d4d5836"
+      },
+      "firebase": {
+        "apiKey": "AIzaSyDAZ7nZp2BRLXwqMA1UhtUYFCV4JxVJ6PY",
+        "authDomain": "my-test-app-d6bf1.firebaseapp.com",
+        "projectId": "my-test-app-d6bf1",
+        "storageBucket": "my-test-app-d6bf1.firebasestorage.app",
+        "messagingSenderId": "929172190792",
+        "appId": "1:929172190792:web:31f347c3761214ee96ca7d",
+        "measurementId": "G-BMR390PZ3Q"
       }
     }
   }

@@ -1,16 +1,19 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import Constants from 'expo-constants';
 
-// Load variables from .env file
+// Load Firebase configuration from app.json (extra)
+const firebaseExtra = Constants.expoConfig?.extra?.firebase || Constants.manifest?.extra?.firebase || {};
+
 const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  apiKey: firebaseExtra.apiKey,
+  authDomain: firebaseExtra.authDomain,
+  projectId: firebaseExtra.projectId,
+  storageBucket: firebaseExtra.storageBucket,
+  messagingSenderId: firebaseExtra.messagingSenderId,
+  appId: firebaseExtra.appId,
+  measurementId: firebaseExtra.measurementId,
 };
 
 // Initialize Firebase App
