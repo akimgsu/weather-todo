@@ -1,60 +1,117 @@
 # 📝 나의 첫 메모장 (Weather Todo App)
 
-이 프로젝트는 React Native 생태계의 최신 기술(Expo Router, Firebase, Location API)을 활용하여 만든 실시간 날씨 기반 메모장 앱입니다. 
-앱을 껐다 켜도 데이터가 영구적으로 유지되며, 현재 내 위치의 날씨를 자동으로 불러옵니다.
+React Native 생태계의 최신 기술(Expo Router, Firebase Authentication, Firestore, Location API)을 활용하여 구축한 **실시간 위치 기반 유저 개인화 메모장 앱**입니다.
+
+---
+
+## ✨ 주요 기능 및 특징
+
+1. **🔐 Firebase 이메일/비밀번호 로그인 (유저별 데이터 격리)**
+   - 이메일 및 비밀번호 기반 회원가입, 로그인, 로그아웃 기능.
+   - 각 유저별 고유 ID(`userId: user.uid`)로 데이터를 저장하고 필터링하여 **나만의 개별 메모장** 제공.
+2. **🌤️ 실시간 위치 기반 날씨 및 단위 토글 (℃ / ℉)**
+   - `expo-location`을 통한 사용자의 현재 위치(위도/경도 및 동네 이름) 자동 감지.
+   - `Open-Meteo API` 기반 무료 실시간 날씨 정보 연동.
+   - 버튼 클릭 한 번으로 **섭씨(℃) ↔ 화씨(℉)** 실시간 단위 변환 기능.
+3. **💾 Firestore 실시간 클라우드 동기화**
+   - 앱을 껐다 켜거나 기기를 변경해도 데이터 영구 보관.
+   - `onSnapshot` 기반 실시간 반응형 동기화로 여러 브라우저/기기 간 즉시 데이터 갱신.
+4. **🎨 3D 커스텀 앱 아이콘**
+   - 날씨와 메모장 컨셉을 반영한 세련된 3D 커스텀 앱 아이콘 적용 (`assets/images/icon.png`).
+5. **🧹 최적화된 리팩토링 코드베이스**
+   - 템플릿의 불필요한 보일러플레이트 파일들을 삭제하고 `AuthScreen`, `Weather`, `IndexScreen` 위주의 깔끔한 컴포넌트 구조 완성.
+
+---
+
+## 🛍️ 구글 플레이 스토어(Google Play Store) 정식 배포 가이드
+
+### 1. 구글 개발자 계정 가입 (`Yourself`)
+- **계정 타입**: `Yourself` (개인 개발자) 선택
+- **등록비**: 평생 $25 USD (1회 결제)
+- **전화번호 양식**: E.164 국제 표준 규격 (`+14041234567` 또는 `+821012345678`)
+
+### 2. 프로덕션 빌드 (.aab 파일 생성)
+스토어 제출을 위해 구글 전용 포맷인 `.aab` (Android App Bundle) 파일 생성:
+```bash
+eas build -p android --profile production
+```
+- 생성 파일: `https://expo.dev/artifacts/eas/...aab` (~26.3 MB, Target SDK 36)
+
+### 3. 구글 플레이 콘솔 앱 세팅 & 파일 업로드
+- **Package Name**: `com.abraham.weathertodo`
+- **내부 테스트(Internal Testing) 트랙 활용**:
+  1. Play Console ➡️ `Test and release` ➡️ `Internal testing` ➡️ `Create new release`
+  2. 다운로드한 `.aab` 파일 드래그 앤 드롭 업로드 후 `Save and publish`
+
+### 4. 테스터 초대 및 다운로드 (`Item not found` 트러블슈팅)
+- **테스터 이메일 추가**: `Testers` 탭 ➡️ 이메일 입력 후 **반드시 `Enter` 키를 눌러 태그 추가** ➡️ 저장
+- **테스터 다운로드 초대 수락 순서**:
+  1. `Copy link` 주소를 스마트폰 브라우저(크롬 등)로 엽니다.
+  2. 화면에서 **"Become a tester" (테스터 참여/초대 수락)** 버튼을 먼저 클릭합니다.
+  3. 승인 후 나타나는 **"Download it on Google Play"** 버튼을 눌러 스토어로 이동하여 설치합니다.
+  *(※ 스마트폰 Play Store의 구글 계정과 등록된 테스터 이메일이 일치해야 합니다.)*
+
+---
 
 ## 🚀 사용된 핵심 기술 및 개념 정리
 
 ### 1. 프론트엔드와 클라우드 공장: Expo & EAS
-**Q: Expo와 EAS는 무슨 역할을 하나요?**
-* **Expo**: 복잡한 모바일 앱 개발을 웹 개발처럼 쉽게 만들어주는 프레임워크입니다. 앱의 눈에 보이는 껍데기와 로직(프론트엔드)을 담당합니다.
-* **EAS (Expo Application Services)**: 내가 짠 코드를 스마트폰에 직접 설치할 수 있는 진짜 앱 파일(`.apk`, `.ipa`)로 번역하고 포장해 주는 **'클라우드 공장'**입니다.
+- **Expo**: React Native 기반 멀티플랫폼 모바일 앱 개발 프레임워크.
+- **EAS (Expo Application Services)**: 작성한 코드를 스마트폰 설치 파일(`.apk`, `.ipa`, `.aab`)로 빌드해 주는 클라우드 자동화 공장.
+- **.easignore 보안 세팅**: `.gitignore`로 비밀키(`.env`)를 보호하면서도 EAS 빌드 시 클라우드 공장에는 `.env`가 정상 전달되도록 `.easignore` 구성.
 
-**Q: Expo(EAS) 없이 앱을 빌드할 수 있나요?**
-* 네, 당연히 가능합니다(로컬 빌드). 하지만 내 컴퓨터에 Android Studio, Java 등 무거운 프로그램을 일일이 설치하고 세팅해야 하며, 특히 아이폰 앱은 비싼 Mac 컴퓨터가 없으면 아예 만들 수조차 없습니다. EAS는 이 모든 번거로운 기계 장비와 인프라를 클라우드에서 대신 해결해 줍니다.
+### 2. 백엔드와 인증: Firebase (Firestore & Auth)
+- **Firestore**: NoSQL 클라우드 데이터베이스.
+- **Authentication**: 이메일/비밀번호 기반 사용자 인증 및 유저 식별자(`UID`) 발급.
+- **보안 규칙 (Rules)**: 데이터베이스 접근 권한 제어 (`allow read, write: if true;` 또는 유저 권한 제어).
 
-**Q: Expo는 어떻게 돈을 버나요? (수익 모델)**
-* 코딩 도구는 평생 무료입니다. 하지만 대기업이나 수많은 개발자가 빠르게 앱을 배포하기 위해 '클라우드 빌드 공장(EAS)'을 하루에도 수십 번씩 돌리려면, 대기열(Queue) 없이 고속으로 공장을 쓸 수 있는 'VIP 유료 멤버십'을 결제해야 합니다.
-
----
-
-### 2. 백엔드와 데이터 창고: Firebase
-**Q: Firebase의 역할은 무엇인가요?**
-* 앱을 끄면 폰 메모리에 있던 휘발성 데이터는 모두 날아갑니다. Firebase는 이 메모들을 영구적으로 안전하게 보관해 주는 구글의 **'클라우드 데이터 창고(백엔드 서버)'**입니다. 
-* 실시간 동기화(`onSnapshot`)를 통해 폰, 태블릿, PC 등 어디서든 똑같은 메모를 즉시 볼 수 있습니다.
-
-**Q: 메모장을 A, B, C가 쓰면 각각 따로 저장되나요? (로그인을 안 넣었는데?)**
-* 아닙니다. 현재 이 앱은 **로그인 기능(인증)**이 없기 때문에, 전 세계 사람이 다 같이 쓰는 **'실시간 공용 게시판(단톡방)'**으로 작동합니다. A가 글을 쓰면 B와 C의 화면에도 실시간으로 나타나고, 누군가 지우면 다 같이 지워집니다.
-* 나만의 메모장으로 만들려면 Firebase Authentication(인증) 기능을 붙여서 유저가 글을 쓸 때마다 각자의 고유 ID(주민등록번호) 꼬리표를 달아서 데이터를 분리해야 합니다.
-
-**Q: Firebase는 어떻게 돈을 버나요? (수익 모델)**
-* 부분 유료화(Freemium) 모델입니다. 처음엔 넉넉하게 무료로 퍼주어 개발자들의 프로젝트를 유치하고 락인(Lock-in) 시킵니다. 앱이 대박 나서 유저가 수십만 명이 되면 그때부터 데이터베이스를 '사용한 만큼만 돈을 내는(Pay-as-you-go)' 구조로 엄청난 서버 유지비 수익을 창출합니다.
+### 3. 위치 기반 날씨: Open-Meteo & Expo Location
+- **Expo Location**: GPS 센서 권한 요청 및 역지오코딩(위도/경도 ➡️ 도시 이름).
+- **Open-Meteo API**: API 키 없이 사용할 수 있는 무료 날씨 API.
 
 ---
 
-### 3. 위치 기반 무료 날씨: Open-Meteo & Expo Location
-* **Expo Location**: 사용자의 스마트폰 GPS 센서에 접근하기 위해 권한을 요청하고, 내 위치의 위도/경도를 추출하여 동네 이름(역지오코딩)으로 변환하는 도구입니다.
-* **Open-Meteo API**: 회원가입이나 복잡한 API 키 발급 과정 없이, 위도와 경도만 넘겨주면 누구나 100% 무료로 사용할 수 있는 훌륭한 날씨 데이터 제공 서비스입니다.
+## 🛠️ 프로젝트 구조
 
-## 🛠️ 앱 실행 및 안드로이드(.apk) 빌드 방법
+```text
+weather-todo/
+├── assets/images/       # 커스텀 3D 앱 아이콘
+├── firebaseConfig.js    # Firebase DB & Auth 설정
+├── src/
+│   ├── app/
+│   │   ├── _layout.tsx  # 메인 레이아웃 (Stack)
+│   │   └── index.tsx    # 메인 앱 화면 (메모장 & 유저 분기)
+│   └── components/
+│       ├── AuthScreen.tsx # 로그인 / 회원가입 컴포넌트
+│       └── Weather.tsx    # 날씨 및 섭씨/화씨 토글 컴포넌트
+├── .easignore           # EAS 빌드 환경변수 포함 설정
+├── .env                 # 비밀키 보안 파일
+├── app.json             # 앱 명세 및 패키지 세팅
+└── README.md            # 기술 명세 문서
+```
 
-### 1. 로컬 환경에서 테스트하기
+---
+
+## ⚙️ 실행 및 빌드 방법
+
+### 1. 사전 설정 (Firebase Console)
+- **Firestore Database**: 데이터베이스 생성 후 규칙 설정 (`allow read, write: if true;` 또는 유저 권한 설정).
+- **Authentication**: Firebase 콘솔 ➡️ Authentication ➡️ Sign-in method ➡️ **Email/Password** 활성화 (Enable).
+
+### 2. 로컬 실행
 ```bash
 npm install
-npx expo start
+npm run web # 또는 npx expo start
 ```
 
-### 2. 안드로이드 실제 폰에 설치하기 (APK 빌드)
-EAS(클라우드 공장)를 이용해 내 폰에 바로 깔 수 있는 안드로이드 설치 파일을 생성합니다.
-
+### 3. 안드로이드 (.apk) 및 프로덕션 (.aab) 빌드
 ```bash
-# 1. 빌드 도구 설치 (최초 1회)
 npm install -g eas-cli
-
-# 2. Expo 계정 로그인
 eas login
 
-# 3. APK 빌드 시작 (클라우드에서 약 5~10분 소요)
+# 폰 직접 설치용 (.apk)
 eas build -p android --profile preview
+
+# 구글 플레이 스토어 제출용 (.aab)
+eas build -p android --profile production
 ```
-빌드가 완료되면 터미널에 나타나는 **QR 코드**나 **다운로드 주소(URL)**를 폰에서 열어 진짜 안드로이드 앱을 폰에 설치할 수 있습니다!

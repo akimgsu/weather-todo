@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import * as Location from 'expo-location';
 
 export default function Weather() {
@@ -7,6 +7,7 @@ export default function Weather() {
   const [city, setCity] = useState("Locating...");
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [isCelsius, setIsCelsius] = useState(true); // State to track temperature unit
 
   useEffect(() => {
     getLocationAndWeather();
@@ -14,7 +15,7 @@ export default function Weather() {
 
   const getLocationAndWeather = async () => {
     try {
-      // 1. Request user's location permission (shows popup on first launch)
+      // 1. Request user's location permission
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         setErrorMsg('Location permission is required to view weather!');
@@ -30,7 +31,6 @@ export default function Weather() {
       // 3. Reverse geocode latitude and longitude to get region name
       const geocode = await Location.reverseGeocodeAsync({ latitude, longitude });
       if (geocode.length > 0) {
-        // Extract region name (e.g., city or district). Default to "Current Location"
         setCity(geocode[0].city || geocode[0].district || geocode[0].region || "Current Location");
       }
 
@@ -46,6 +46,18 @@ export default function Weather() {
       setErrorMsg('Unable to fetch location or weather data.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Convert Celsius to Fahrenheit
+  const getDisplayTemperature = () => {
+    if (!weather) return '';
+    const tempCelsius = weather.temperature;
+    if (isCelsius) {
+      return `${tempCelsius}℃`;
+    } else {
+      const tempFahrenheit = (tempCelsius * 1.8 + 32).toFixed(1);
+      return `${tempFahrenheit}℉`;
     }
   };
 
@@ -70,9 +82,19 @@ export default function Weather() {
   return (
     <View style={styles.container}>
       {weather ? (
-        <Text style={styles.weatherText}>
-          📍 {city} Temp: {weather.temperature}℃
-        </Text>
+        <View style={styles.weatherRow}>
+          <Text style={styles.weatherText}>
+            📍 {city} Temp: {getDisplayTemperature()}
+          </Text>
+          <TouchableOpacity 
+            style={styles.toggleButton} 
+            onPress={() => setIsCelsius(!isCelsius)}
+          >
+            <Text style={styles.toggleText}>
+              Switch to {isCelsius ? '℉' : '℃'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       ) : (
         <Text style={styles.errorText}>
           Unable to load weather information 😢
@@ -94,11 +116,31 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+    width: '100%',
+  },
+  weatherRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
   },
   weatherText: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#1565C0',
+    flex: 1,
+  },
+  toggleButton: {
+    backgroundColor: '#1565C0',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginLeft: 10,
+  },
+  toggleText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   errorText: {
     fontSize: 14,

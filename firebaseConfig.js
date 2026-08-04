@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 // Load variables from .env file
 const firebaseConfig = {
@@ -17,3 +18,6 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Cloud Firestore and export it
 export const db = getFirestore(app);
+
+// Initialize Firebase Auth and export it
+export const auth = getAuth(app);
