@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { collection, addDoc, onSnapshot, query, where, deleteDoc, doc } from 'firebase/firestore';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { db, auth } from '../../firebaseConfig';
-import { Ionicons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import Weather from '../components/Weather';
 import AuthScreen from '../components/AuthScreen';
 
@@ -104,7 +104,7 @@ export default function IndexScreen() {
             <View style={styles.headerContainer}>
               <View style={styles.headerLeft}>
                 <View style={styles.avatar}>
-                  <Ionicons name="person" size={16} color="#4F46E5" />
+                  <Feather name="user" size={16} color="#4F46E5" />
                 </View>
                 <View>
                   <Text style={styles.greetingText}>Hello,</Text>
@@ -112,7 +112,7 @@ export default function IndexScreen() {
                 </View>
               </View>
               <TouchableOpacity style={styles.logoutIconButton} onPress={() => signOut(auth)}>
-                <Ionicons name="log-out-outline" size={24} color="#6B7280" />
+                <Feather name="log-out" size={24} color="#6B7280" />
               </TouchableOpacity>
             </View>
 
@@ -137,17 +137,17 @@ export default function IndexScreen() {
                 renderItem={({ item }) => (
                   <View style={styles.memoItem}>
                     <TouchableOpacity style={styles.checkboxPlaceholder}>
-                      <Ionicons name="ellipse-outline" size={24} color="#D1D5DB" />
+                      <Feather name="circle" size={24} color="#D1D5DB" />
                     </TouchableOpacity>
                     <Text style={styles.memoText}>{item.text}</Text>
                     <TouchableOpacity onPress={() => deleteMemo(item.id)} style={styles.deleteButton}>
-                      <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                      <Feather name="trash-2" size={20} color="#EF4444" />
                     </TouchableOpacity>
                   </View>
                 )}
                 ListEmptyComponent={
                   <View style={styles.emptyContainer}>
-                    <Ionicons name="document-text-outline" size={48} color="#D1D5DB" />
+                    <Feather name="file-text" size={48} color="#D1D5DB" />
                     <Text style={styles.emptyText}>No tasks yet. Add one below!</Text>
                   </View>
                 }
@@ -168,7 +168,7 @@ export default function IndexScreen() {
                 onPress={addMemo}
                 disabled={inputText.trim() === ''}
               >
-                <Ionicons name="arrow-up" size={24} color="white" />
+                <Feather name="arrow-up" size={24} color="white" />
               </TouchableOpacity>
             </View>
           </>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
-import { Ionicons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 
 export default function AuthScreen() {
   const [email, setEmail] = useState('');
@@ -48,7 +48,7 @@ export default function AuthScreen() {
     >
       <View style={styles.container}>
         <View style={styles.iconContainer}>
-          <Ionicons name="cloudy-night-outline" size={60} color="#4F46E5" />
+          <Feather name="cloud" size={60} color="#4F46E5" />
         </View>
         <Text style={styles.title}>{isSignUp ? 'Create Account' : 'Welcome Back'}</Text>
         <Text style={styles.subtitle}>
@@ -57,13 +57,13 @@ export default function AuthScreen() {
 
         {errorMessage ? (
           <View style={styles.errorContainer}>
-            <Ionicons name="alert-circle-outline" size={20} color="#DC2626" />
+            <Feather name="alert-circle" size={20} color="#DC2626" />
             <Text style={styles.errorText}>{errorMessage}</Text>
           </View>
         ) : null}
 
         <View style={styles.inputContainer}>
-          <Ionicons name="mail-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+          <Feather name="mail" size={20} color="#9CA3AF" style={styles.inputIcon} />
           <TextInput
             style={styles.input}
             placeholder="Email address"
@@ -76,7 +76,7 @@ export default function AuthScreen() {
         </View>
 
         <View style={styles.inputContainer}>
-          <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+          <Feather name="lock" size={20} color="#9CA3AF" style={styles.inputIcon} />
           <TextInput
             style={styles.input}
             placeholder="Password"
