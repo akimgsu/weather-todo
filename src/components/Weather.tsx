@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Dimensions } from 'react-native';
 import * as Location from 'expo-location';
-import { Ionicons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
@@ -59,16 +59,16 @@ export default function Weather() {
     }
   };
 
-  // Basic weather code mapping to Ionicons
-  const getWeatherIcon = (code: number) => {
-    if (code === 0 || code === 1) return 'sunny';
-    if (code === 2 || code === 3) return 'partly-sunny';
-    if (code >= 45 && code <= 48) return 'cloudy';
-    if (code >= 51 && code <= 67) return 'rainy';
-    if (code >= 71 && code <= 77) return 'snow';
-    if (code >= 80 && code <= 82) return 'rainy';
-    if (code >= 95 && code <= 99) return 'thunderstorm';
-    return 'sunny';
+  // Weather code mapping to Feather icons
+  const getWeatherIcon = (code: number): keyof typeof Feather.glyphMap => {
+    if (code === 0 || code === 1) return 'sun';
+    if (code === 2 || code === 3) return 'cloud';
+    if (code >= 45 && code <= 48) return 'cloud'; // fog
+    if (code >= 51 && code <= 67) return 'cloud-rain';
+    if (code >= 71 && code <= 77) return 'cloud-snow';
+    if (code >= 80 && code <= 82) return 'cloud-rain';
+    if (code >= 95 && code <= 99) return 'cloud-lightning';
+    return 'sun';
   };
 
   if (loading) {
@@ -83,7 +83,7 @@ export default function Weather() {
   if (errorMsg) {
     return (
       <View style={[styles.card, styles.centerContent]}>
-        <Ionicons name="alert-circle-outline" size={24} color="#EF4444" />
+        <Feather name="alert-circle" size={24} color="#EF4444" />
         <Text style={styles.errorText}>{errorMsg}</Text>
       </View>
     );
@@ -95,7 +95,7 @@ export default function Weather() {
         <View style={styles.content}>
           <View style={styles.leftSection}>
             <View style={styles.locationContainer}>
-              <Ionicons name="location-sharp" size={16} color="#E0E7FF" style={styles.locationIcon} />
+              <Feather name="map-pin" size={14} color="#E0E7FF" style={styles.locationIcon} />
               <Text style={styles.cityText} numberOfLines={1}>{city}</Text>
             </View>
             <View style={styles.tempContainer}>
@@ -105,7 +105,7 @@ export default function Weather() {
           </View>
 
           <View style={styles.rightSection}>
-            <Ionicons name={getWeatherIcon(weather.weathercode)} size={64} color="#FFFFFF" style={styles.weatherIcon} />
+            <Feather name={getWeatherIcon(weather.weathercode)} size={64} color="#FFFFFF" style={styles.weatherIcon} />
             <TouchableOpacity 
               style={styles.toggleButton} 
               onPress={() => setIsCelsius(!isCelsius)}
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   locationIcon: {
-    marginRight: 4,
+    marginRight: 6,
   },
   cityText: {
     fontSize: 14,
