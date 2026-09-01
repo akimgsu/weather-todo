@@ -17,7 +17,7 @@
 | 위치 | **expo-location** | GPS 권한·좌표·역지오코딩 |
 | 날씨 API | **Open-Meteo** | 무료 현재 날씨 (API 키 불필요) |
 | 아이콘 | **@expo/vector-icons** (Feather) | UI 아이콘 |
-| CI | **GitHub Actions** | typecheck + web export |
+| CI | **GitHub Actions** | `release` 푸시 또는 수동 실행 시 typecheck + web export |
 | 네이티브 빌드 | **EAS Build** | APK / AAB 생성 |
 
 ### 주요 의존성 버전 (요약)
@@ -67,7 +67,7 @@ flowchart LR
   end
 
   subgraph ci [GitHub Actions]
-    C1[push / PR] --> C2[npm ci]
+    C1[release 푸시 또는<br/>workflow_dispatch] --> C2[npm ci]
     C2 --> C3[typecheck]
     C3 --> C4[expo export --platform web]
   end
@@ -87,7 +87,7 @@ flowchart LR
 | 1. 설정 | Firebase 프로젝트 + `app.json` | 아래 [Firebase 설정](#firebase-설정) |
 | 2. 개발 | Expo 개발 서버 | `npm start` / `npm run web` |
 | 3. 검증 | 타입 검사 · 웹 번들 | `npm run typecheck` · `npm run export:web` |
-| 4. CI | push/PR 시 자동 컴파일 | `.github/workflows/ci.yml` |
+| 4. CI | `release` 푸시 또는 Actions에서 수동 실행 | `.github/workflows/ci.yml` |
 | 5. 빌드 | 설치 파일 | `eas build -p android --profile preview\|production` |
 | 6. 스토어 | Play 내부 테스트 | `com.abraham.weathertodo` |
 
@@ -161,10 +161,15 @@ npm run ios        # iOS (macOS)
 ## CI (GitHub Actions)
 
 파일: `.github/workflows/ci.yml`  
-트리거: `main` / `master` **push**, 모든 **pull_request**
+LingoFlow와 같이 **`main` 매 커밋에는 돌지 않습니다.**
+
+| 트리거 | 설명 |
+|--------|------|
+| `workflow_dispatch` | GitHub → Actions → CI → **Run workflow** (수동) |
+| `push` → `release` | `release` 브랜치에 푸시할 때 |
 
 ```text
-checkout → Node 22 → npm ci → typecheck → expo export --platform web
+checkout → Node 20 → npm ci → typecheck → expo export --platform web
 ```
 
 로컬에서 CI와 동일하게 확인:
@@ -201,7 +206,7 @@ weather-todo/
 ├── app.json                      # 앱 메타 + Firebase (extra.firebase) + EAS
 ├── firebaseConfig.js             # Firebase Auth / Firestore 초기화
 ├── eas.json                      # preview(APK) / production(AAB)
-├── .github/workflows/ci.yml      # typecheck + web export
+├── .github/workflows/ci.yml      # release/수동: typecheck + web export
 ├── package.json
 ├── src/
 │   ├── app/
