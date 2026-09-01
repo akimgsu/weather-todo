@@ -17,7 +17,7 @@
 | 위치 | **expo-location** | GPS 권한·좌표·역지오코딩 |
 | 날씨 API | **Open-Meteo** | 무료 현재 날씨 (API 키 불필요) |
 | 아이콘 | **@expo/vector-icons** (Feather) | UI 아이콘 |
-| CI | **GitHub Actions** | `release` 푸시 또는 수동 실행 시 typecheck + web export |
+| CI | **GitHub Actions** | `release`/수동: typecheck·web export + Android AAB 아티팩트 |
 | 네이티브 빌드 | **EAS Build** | APK / AAB 생성 |
 
 ### 주요 의존성 버전 (요약)
@@ -87,9 +87,10 @@ flowchart LR
 | 1. 설정 | Firebase 프로젝트 + `app.json` | 아래 [Firebase 설정](#firebase-설정) |
 | 2. 개발 | Expo 개발 서버 | `npm start` / `npm run web` |
 | 3. 검증 | 타입 검사 · 웹 번들 | `npm run typecheck` · `npm run export:web` |
-| 4. CI | `release` 푸시 또는 Actions에서 수동 실행 | `.github/workflows/ci.yml` |
-| 5. 빌드 | 설치 파일 | `eas build -p android --profile preview\|production` |
-| 6. 스토어 | Play 내부 테스트 | `com.abraham.weathertodo` |
+| 4. CI | `release`/수동 → typecheck·export | `.github/workflows/ci.yml` |
+| 5. Android 빌드 | `release`/수동 → `.aab` 아티팩트 | `.github/workflows/build-android.yml` (`EXPO_TOKEN` 필요) |
+| 6. 빌드 (로컬 EAS) | 설치 파일 | `eas build -p android --profile preview\|production` |
+| 7. 스토어 | Play 내부 테스트 | `com.abraham.weathertodo` |
 
 ---
 
@@ -160,19 +161,23 @@ npm run ios        # iOS (macOS)
 
 ## CI (GitHub Actions)
 
-파일: `.github/workflows/ci.yml`  
-LingoFlow와 같이 **`main` 매 커밋에는 돌지 않습니다.**
+LingoFlow와 같이 **`main` 매 커밋에는 돌지 않습니다.**  
+트리거: **`workflow_dispatch`(수동)** 또는 **`release` 브랜치 push**
 
-| 트리거 | 설명 |
-|--------|------|
-| `workflow_dispatch` | GitHub → Actions → CI → **Run workflow** (수동) |
-| `push` → `release` | `release` 브랜치에 푸시할 때 |
+| 워크플로 | 파일 | 결과 |
+|----------|------|------|
+| **CI** | `.github/workflows/ci.yml` | typecheck + web export (아티팩트 없음) |
+| **Build Android** | `.github/workflows/build-android.yml` | Play용 **`.aab`** → Actions Artifacts |
 
-```text
-checkout → Node 20 → npm ci → typecheck → expo export --platform web
-```
+### Android AAB 받는 방법
 
-로컬에서 CI와 동일하게 확인:
+1. GitHub repo → **Settings → Secrets and variables → Actions**  
+   - `EXPO_TOKEN` 추가 ([expo.dev](https://expo.dev) → Access Token)
+2. **Actions** → **Build Android (EAS Local)** → **Run workflow**
+3. 성공 후 해당 run 상단 **Artifacts**에서 `weather-todo-Android-AAB` 다운로드  
+   (보관 7일)
+
+로컬에서 타입/웹만 확인:
 
 ```bash
 npm run typecheck && npm run export:web
@@ -206,7 +211,9 @@ weather-todo/
 ├── app.json                      # 앱 메타 + Firebase (extra.firebase) + EAS
 ├── firebaseConfig.js             # Firebase Auth / Firestore 초기화
 ├── eas.json                      # preview(APK) / production(AAB)
-├── .github/workflows/ci.yml      # release/수동: typecheck + web export
+├── .github/workflows/
+│   ├── ci.yml                    # release/수동: typecheck + web export
+│   └── build-android.yml         # release/수동: AAB → Artifacts
 ├── package.json
 ├── src/
 │   ├── app/
