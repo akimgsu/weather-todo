@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { collection, addDoc, onSnapshot, query, where, deleteDoc, doc } from 'firebase/firestore';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
@@ -7,6 +17,7 @@ import { db, auth } from '../../firebaseConfig';
 import { Feather } from '@expo/vector-icons';
 import Weather from '../components/Weather';
 import AuthScreen from '../components/AuthScreen';
+import { colors } from '../constants/colors';
 
 export default function IndexScreen() {
   const [user, setUser] = useState<User | null>(null);
@@ -16,7 +27,6 @@ export default function IndexScreen() {
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // 1. Listen to Authentication State
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -25,7 +35,6 @@ export default function IndexScreen() {
     return () => unsubscribeAuth();
   }, []);
 
-  // 2. Fetch user-specific memos in real-time
   useEffect(() => {
     if (!user) {
       setMemos([]);
@@ -34,35 +43,34 @@ export default function IndexScreen() {
     }
 
     setLoading(true);
-    const q = query(
-      collection(db, 'memos'),
-      where('userId', '==', user.uid)
+    const q = query(collection(db, 'memos'), where('userId', '==', user.uid));
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const newMemos = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+
+        newMemos.sort((a: any, b: any) => {
+          const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : a.createdAt || 0;
+          const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : b.createdAt || 0;
+          return timeB - timeA;
+        });
+
+        setMemos(newMemos);
+        setLoading(false);
+      },
+      (err) => {
+        console.log('Firestore query error:', err);
+        setLoading(false);
+      }
     );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const newMemos = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-
-      // Client-side sort by createdAt (newest first)
-      newMemos.sort((a: any, b: any) => {
-        const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : (a.createdAt || 0);
-        const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : (b.createdAt || 0);
-        return timeB - timeA;
-      });
-
-      setMemos(newMemos);
-      setLoading(false);
-    }, (err) => {
-      console.log('Firestore query error:', err);
-      setLoading(false);
-    });
 
     return () => unsubscribe();
   }, [user]);
 
-  // 3. Add memo tied to current user
   const addMemo = async () => {
     if (inputText.trim() === '' || !user) return;
 
@@ -75,7 +83,6 @@ export default function IndexScreen() {
     setInputText('');
   };
 
-  // 4. Delete memo
   const deleteMemo = async (id: string) => {
     await deleteDoc(doc(db, 'memos', id));
   };
@@ -83,7 +90,7 @@ export default function IndexScreen() {
   if (authLoading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
@@ -100,33 +107,32 @@ export default function IndexScreen() {
           </View>
         ) : (
           <>
-            {/* Header */}
             <View style={styles.headerContainer}>
-              <View style={styles.headerLeft}>
-                <View style={styles.avatar}>
-                  <Feather name="user" size={16} color="#4F46E5" />
-                </View>
-                <View>
-                  <Text style={styles.greetingText}>Hello,</Text>
-                  <Text style={styles.userEmail} numberOfLines={1}>{user.email?.split('@')[0]}</Text>
-                </View>
+              <View>
+                <Text style={styles.brandMark}>Weather Todo</Text>
+                <Text style={styles.userEmail} numberOfLines={1}>
+                  {user.email}
+                </Text>
               </View>
-              <TouchableOpacity style={styles.logoutIconButton} onPress={() => signOut(auth)}>
-                <Feather name="log-out" size={24} color="#6B7280" />
+              <TouchableOpacity
+                style={styles.logoutButton}
+                onPress={() => signOut(auth)}
+                accessibilityLabel="Sign out"
+              >
+                <Feather name="log-out" size={20} color={colors.muted} />
               </TouchableOpacity>
             </View>
 
             <Weather />
 
             <View style={styles.listHeaderContainer}>
-              <Text style={styles.listTitle}>My Tasks</Text>
-              <Text style={styles.listCount}>{memos.length} items</Text>
+              <Text style={styles.listTitle}>Notes</Text>
+              <Text style={styles.listCount}>{memos.length}</Text>
             </View>
 
-            {/* List display area */}
             {loading ? (
               <View style={styles.centerContent}>
-                <ActivityIndicator size="large" color="#4F46E5" />
+                <ActivityIndicator size="large" color={colors.accent} />
               </View>
             ) : (
               <FlatList
@@ -136,39 +142,42 @@ export default function IndexScreen() {
                 contentContainerStyle={styles.listContent}
                 renderItem={({ item }) => (
                   <View style={styles.memoItem}>
-                    <TouchableOpacity style={styles.checkboxPlaceholder}>
-                      <Feather name="circle" size={24} color="#D1D5DB" />
-                    </TouchableOpacity>
+                    <View style={styles.memoDot} />
                     <Text style={styles.memoText}>{item.text}</Text>
-                    <TouchableOpacity onPress={() => deleteMemo(item.id)} style={styles.deleteButton}>
-                      <Feather name="trash-2" size={20} color="#EF4444" />
+                    <TouchableOpacity
+                      onPress={() => deleteMemo(item.id)}
+                      style={styles.deleteButton}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Feather name="x" size={18} color={colors.faint} />
                     </TouchableOpacity>
                   </View>
                 )}
                 ListEmptyComponent={
                   <View style={styles.emptyContainer}>
-                    <Feather name="file-text" size={48} color="#D1D5DB" />
-                    <Text style={styles.emptyText}>No tasks yet. Add one below!</Text>
+                    <Text style={styles.emptyTitle}>Nothing here yet</Text>
+                    <Text style={styles.emptyText}>Add a note below — it syncs to your account.</Text>
                   </View>
                 }
               />
             )}
 
-            {/* Memo input area */}
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.input}
-                placeholder="What do you need to do?"
-                placeholderTextColor="#9CA3AF"
+                placeholder="Write a note…"
+                placeholderTextColor={colors.faint}
                 value={inputText}
                 onChangeText={setInputText}
+                onSubmitEditing={addMemo}
+                returnKeyType="done"
               />
               <TouchableOpacity
                 style={[styles.addButton, inputText.trim() === '' && styles.addButtonDisabled]}
                 onPress={addMemo}
                 disabled={inputText.trim() === ''}
               >
-                <Feather name="arrow-up" size={24} color="white" />
+                <Feather name="plus" size={22} color={colors.white} />
               </TouchableOpacity>
             </View>
           </>
@@ -181,12 +190,12 @@ export default function IndexScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F3F4F6', // Gray-100
+    backgroundColor: colors.bg,
   },
   container: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'android' ? 20 : 0,
+    paddingHorizontal: 22,
+    paddingTop: Platform.OS === 'android' ? 16 : 0,
   },
   authWrapper: {
     flex: 1,
@@ -200,128 +209,118 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-    marginTop: 10,
+    alignItems: 'flex-start',
+    marginBottom: 20,
+    marginTop: 8,
   },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#E0E7FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  greetingText: {
-    fontSize: 14,
-    color: '#6B7280',
-    fontWeight: '500',
+  brandMark: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.ink,
+    letterSpacing: -0.6,
   },
   userEmail: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
+    marginTop: 4,
+    fontSize: 13,
+    color: colors.muted,
+    maxWidth: 240,
   },
-  logoutIconButton: {
-    padding: 8,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+  logoutButton: {
+    padding: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    backgroundColor: colors.surface,
   },
   listHeaderContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginBottom: 16,
+    alignItems: 'baseline',
+    marginBottom: 12,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   listTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#111827',
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.ink,
+    letterSpacing: -0.3,
   },
   listCount: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.faint,
     fontWeight: '600',
   },
   listContent: {
-    paddingBottom: 20,
+    paddingBottom: 16,
   },
   memoItem: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 12,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 1,
   },
-  checkboxPlaceholder: {
+  memoDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: colors.accent,
     marginRight: 12,
   },
   memoText: {
     fontSize: 16,
     flex: 1,
-    color: '#374151',
+    color: colors.ink,
     lineHeight: 22,
   },
   deleteButton: {
-    padding: 8,
-    marginLeft: 8,
+    padding: 6,
+    marginLeft: 4,
   },
   emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
+    paddingVertical: 48,
+    alignItems: 'flex-start',
+  },
+  emptyTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.ink,
+    marginBottom: 6,
   },
   emptyText: {
-    marginTop: 12,
-    color: '#9CA3AF',
-    fontSize: 16,
+    color: colors.muted,
+    fontSize: 15,
+    lineHeight: 22,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 8,
-    borderRadius: 32,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 10,
-    marginBottom: Platform.OS === 'ios' ? 10 : 20,
-    marginTop: 10,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 6,
+    borderRadius: 14,
+    marginBottom: Platform.OS === 'ios' ? 10 : 16,
+    marginTop: 8,
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#111827',
-    paddingHorizontal: 16,
-    height: 50,
+    color: colors.ink,
+    paddingHorizontal: 14,
+    height: 46,
   },
   addButton: {
-    backgroundColor: '#4F46E5',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    backgroundColor: colors.accent,
+    width: 42,
+    height: 42,
+    borderRadius: 11,
     justifyContent: 'center',
     alignItems: 'center',
   },
   addButtonDisabled: {
-    backgroundColor: '#9CA3AF',
+    backgroundColor: colors.faint,
   },
 });

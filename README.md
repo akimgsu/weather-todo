@@ -1,115 +1,224 @@
-# 📝 나의 첫 메모장 (Weather Todo App)
+# Weather Todo
 
-React Native 생태계의 최신 기술(Expo Router, Firebase Authentication, Firestore, Location API)을 활용하여 구축한 **실시간 위치 기반 유저 개인화 메모장 앱**입니다.
-
----
-
-## ✨ 주요 기능 및 특징
-
-1. **🔐 Firebase 이메일/비밀번호 로그인 (유저별 데이터 격리)**
-   - 이메일 및 비밀번호 기반 회원가입, 로그인, 로그아웃 기능.
-   - 각 유저별 고유 ID(`userId: user.uid`)로 데이터를 저장하고 필터링하여 **나만의 개별 메모장** 제공.
-2. **🌤️ 실시간 위치 기반 날씨 및 단위 토글 (℃ / ℉)**
-   - `expo-location`을 통한 사용자의 현재 위치(위도/경도 및 동네 이름) 자동 감지.
-   - `Open-Meteo API` 기반 무료 실시간 날씨 정보 연동.
-   - 버튼 클릭 한 번으로 **섭씨(℃) ↔ 화씨(℉)** 실시간 단위 변환 기능.
-3. **💾 Firestore 실시간 클라우드 동기화**
-   - 앱을 껐다 켜거나 기기를 변경해도 데이터 영구 보관.
-   - `onSnapshot` 기반 실시간 반응형 동기화로 여러 브라우저/기기 간 즉시 데이터 갱신.
-4. **🎨 3D 커스텀 앱 아이콘**
-   - 날씨와 메모장 컨셉을 반영한 세련된 3D 커스텀 앱 아이콘 적용 (`assets/images/icon.png`).
-5. **🧹 최적화된 리팩토링 코드베이스**
-   - 템플릿의 불필요한 보일러플레이트 파일들을 삭제하고 `AuthScreen`, `Weather`, `IndexScreen` 위주의 깔끔한 컴포넌트 구조 완성.
+위치 기반 날씨 + Firebase 개인 메모 앱입니다.
 
 ---
 
-## 🛍️ 구글 플레이 스토어(Google Play Store) 정식 배포 가이드
+## 기술 스택
 
-### 1. 구글 개발자 계정 가입 (`Yourself`)
-- **계정 타입**: `Yourself` (개인 개발자) 선택
-- **등록비**: 평생 $25 USD (1회 결제)
-- **전화번호 양식**: E.164 국제 표준 규격 (`+14041234567` 또는 `+821012345678`)
+| 영역 | 기술 | 역할 |
+|------|------|------|
+| UI / 앱 | **Expo 57**, **React Native 0.86**, **React 19** | 크로스 플랫폼 (Web / Android / iOS) |
+| 라우팅 | **Expo Router** | 파일 기반 네비게이션 (`src/app`) |
+| 언어 | **TypeScript** | 정적 타입 검사 (`tsc --noEmit`) |
+| 인증 | **Firebase Authentication** | 이메일/비밀번호 로그인·회원가입 |
+| 데이터베이스 | **Cloud Firestore** | 유저별 메모 실시간 동기화 (`onSnapshot`) |
+| 설정 | **expo-constants** + `app.json` | Firebase 클라이언트 설정 (`.env` 없음) |
+| 위치 | **expo-location** | GPS 권한·좌표·역지오코딩 |
+| 날씨 API | **Open-Meteo** | 무료 현재 날씨 (API 키 불필요) |
+| 아이콘 | **@expo/vector-icons** (Feather) | UI 아이콘 |
+| CI | **GitHub Actions** | typecheck + web export |
+| 네이티브 빌드 | **EAS Build** | APK / AAB 생성 |
 
-### 2. 프로덕션 빌드 (.aab 파일 생성)
-스토어 제출을 위해 구글 전용 포맷인 `.aab` (Android App Bundle) 파일 생성:
-```bash
-eas build -p android --profile production
-```
-- 생성 파일: `https://expo.dev/artifacts/eas/...aab` (~26.3 MB, Target SDK 36)
+### 주요 의존성 버전 (요약)
 
-### 3. 구글 플레이 콘솔 앱 세팅 & 파일 업로드
-- **Package Name**: `com.abraham.weathertodo`
-- **내부 테스트(Internal Testing) 트랙 활용**:
-  1. Play Console ➡️ `Test and release` ➡️ `Internal testing` ➡️ `Create new release`
-  2. 다운로드한 `.aab` 파일 드래그 앤 드롭 업로드 후 `Save and publish`
-
-### 4. 테스터 초대 및 다운로드 (`Item not found` 트러블슈팅)
-- **테스터 이메일 추가**: `Testers` 탭 ➡️ 이메일 입력 후 **반드시 `Enter` 키를 눌러 태그 추가** ➡️ 저장
-- **테스터 다운로드 초대 수락 순서**:
-  1. `Copy link` 주소를 스마트폰 브라우저(크롬 등)로 엽니다.
-  2. 화면에서 **"Become a tester" (테스터 참여/초대 수락)** 버튼을 먼저 클릭합니다.
-  3. 승인 후 나타나는 **"Download it on Google Play"** 버튼을 눌러 스토어로 이동하여 설치합니다.
-  *(※ 스마트폰 Play Store의 구글 계정과 등록된 테스터 이메일이 일치해야 합니다.)*
+- `expo` ~57 · `expo-router` ~57 · `expo-location` ~57
+- `firebase` ^12 · `typescript` ~6 · `react-native` 0.86
 
 ---
 
-## 🚀 사용된 핵심 기술 및 개념 정리
+## 앱 워크플로우
 
-### 1. 프론트엔드와 클라우드 공장: Expo & EAS
-- **Expo**: React Native 기반 멀티플랫폼 모바일 앱 개발 프레임워크.
-- **EAS (Expo Application Services)**: 작성한 코드를 스마트폰 설치 파일(`.apk`, `.ipa`, `.aab`)로 빌드해 주는 클라우드 자동화 공장.
-- **Expo Extra Config**: `app.json`의 `extra.firebase` 필드를 통해 공개용 클라이언트 접속 세팅을 관리. `.easignore`나 복잡한 `.env` 주입 과정 없이 로컬/EAS 빌드 100% 호환.
-
-### 2. 백엔드와 인증: Firebase (Firestore & Auth)
-- **Firestore**: NoSQL 클라우드 데이터베이스.
-- **Authentication**: 이메일/비밀번호 기반 사용자 인증 및 유저 식별자(`UID`) 발급.
-- **보안 규칙 (Rules)**: 데이터베이스 접근 권한 제어 (`allow read, write: if true;` 또는 유저 권한 제어).
-
-### 3. 위치 기반 날씨: Open-Meteo & Expo Location
-- **Expo Location**: GPS 센서 권한 요청 및 역지오코딩(위도/경도 ➡️ 도시 이름).
-- **Open-Meteo API**: API 키 없이 사용할 수 있는 무료 날씨 API.
-
----
-
-## 🛠️ 프로젝트 구조
-
-```text
-weather-todo/
-├── assets/images/       # 커스텀 3D 앱 아이콘
-├── firebaseConfig.js    # Firebase DB & Auth 설정 (expo-constants 기반)
-├── src/
-│   ├── app/
-│   │   ├── _layout.tsx  # 메인 레이아웃 (Stack)
-│   │   └── index.tsx    # 메인 앱 화면 (메모장 & 유저 분기)
-│   └── components/
-│       ├── AuthScreen.tsx # 로그인 / 회원가입 컴포넌트
-│       └── Weather.tsx    # 날씨 및 섭씨/화씨 토글 컴포넌트
-├── app.json             # 앱 명세, 패키지 및 Firebase Extra 설정
-└── README.md            # 기술 명세 문서
+```mermaid
+flowchart TD
+  A[앱 실행] --> B{Firebase Auth<br/>로그인 상태?}
+  B -->|미로그인| C[AuthScreen<br/>Sign in / Sign up]
+  C --> D[Email/Password]
+  D --> E[Auth 성공 → user.uid]
+  B -->|로그인됨| E
+  E --> F[메인 화면]
+  F --> G[Weather<br/>위치 권한 → Open-Meteo]
+  F --> H[Notes<br/>Firestore memos where userId]
+  H --> I[추가 / 삭제<br/>실시간 onSnapshot]
 ```
 
+### 데이터 흐름
+
+1. **인증** — `onAuthStateChanged`로 세션 감지 → 없으면 `AuthScreen`, 있으면 메인
+2. **날씨** — 위치 허용 → 위경도 → Open-Meteo `current_weather` → ℃/℉ 표시  
+   (웹은 브라우저 위치 허용 + **Allow location** 버튼 클릭 필요)
+3. **메모** — `memos` 컬렉션에 `{ text, userId, createdAt }` 저장 · 본인 `uid`만 조회
+
+### Firestore 규칙 (요지)
+
+- 로그인 사용자만 접근
+- `userId == request.auth.uid`인 문서만 읽기/쓰기/생성
+
 ---
 
-## ⚙️ 실행 및 빌드 방법
+## 개발 → CI → 배포 워크플로우
 
-### 1. 사전 설정 (Firebase Console)
-- **Firestore Database**: 데이터베이스 생성 후 규칙 설정 (`allow read, write: if true;` 또는 유저 권한 설정).
-- **Authentication**: Firebase 콘솔 ➡️ Authentication ➡️ Sign-in method ➡️ **Email/Password** 활성화 (Enable).
+```mermaid
+flowchart LR
+  subgraph local [로컬]
+    L1[npm install] --> L2[npm start / web]
+    L2 --> L3[기능 확인]
+    L3 --> L4[npm run typecheck]
+  end
 
-### 2. 로컬 실행
+  subgraph ci [GitHub Actions]
+    C1[push / PR] --> C2[npm ci]
+    C2 --> C3[typecheck]
+    C3 --> C4[expo export --platform web]
+  end
+
+  subgraph release [배포]
+    R1[eas build preview → APK]
+    R2[eas build production → AAB]
+    R3[Play Console 내부 테스트]
+  end
+
+  local --> ci
+  ci --> release
+```
+
+| 단계 | 무엇을 하나 | 명령 / 위치 |
+|------|-------------|-------------|
+| 1. 설정 | Firebase 프로젝트 + `app.json` | 아래 [Firebase 설정](#firebase-설정) |
+| 2. 개발 | Expo 개발 서버 | `npm start` / `npm run web` |
+| 3. 검증 | 타입 검사 · 웹 번들 | `npm run typecheck` · `npm run export:web` |
+| 4. CI | push/PR 시 자동 컴파일 | `.github/workflows/ci.yml` |
+| 5. 빌드 | 설치 파일 | `eas build -p android --profile preview\|production` |
+| 6. 스토어 | Play 내부 테스트 | `com.abraham.weathertodo` |
+
+---
+
+## Firebase 설정
+
+1. [Firebase Console](https://console.firebase.google.com/)에서 프로젝트 생성
+2. **+ Add app → Web**으로 웹 앱 등록 → config 값 복사
+3. **Authentication** → Get started → **Sign-in method** → **Email/Password** Enable
+4. **Firestore** 생성 후 Rules:
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /memos/{memoId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.userId;
+    }
+  }
+}
+```
+
+5. config를 `app.json` → `expo.extra.firebase`에 넣기 (**`.env` 사용 안 함**)
+
+```json
+"extra": {
+  "firebase": {
+    "apiKey": "...",
+    "authDomain": "...",
+    "projectId": "...",
+    "storageBucket": "...",
+    "messagingSenderId": "...",
+    "appId": "...",
+    "measurementId": "..."
+  }
+}
+```
+
+`firebaseConfig.js`가 `expo-constants`로 위 값을 읽어 Auth / Firestore를 초기화합니다.
+
+---
+
+## 로컬 실행
+
 ```bash
 npm install
-npm run web # 또는 npx expo start
+npm start          # Expo 개발 서버 (w / a / i 로 플랫폼 선택)
+npm run web        # 브라우저
+npm run android    # Android
+npm run ios        # iOS (macOS)
 ```
 
-### 3. 안드로이드 (.apk) 및 프로덕션 (.aab) 빌드
+### npm 스크립트
+
+| 명령 | 설명 |
+|------|------|
+| `npm start` | Expo 개발 서버 |
+| `npm run web` / `android` / `ios` | 플랫폼별 실행 |
+| `npm run typecheck` | TypeScript (`tsc --noEmit`) |
+| `npm run export:web` | 웹 정적 번들 (CI와 동일) |
+| `npm run lint` | Expo lint |
+
+웹에서 날씨가 안 나오면: 주소창 ⓘ → Location **Allow** → 패널의 **Allow location** 클릭.
+
+---
+
+## CI (GitHub Actions)
+
+파일: `.github/workflows/ci.yml`  
+트리거: `main` / `master` **push**, 모든 **pull_request**
+
+```text
+checkout → Node 22 → npm ci → typecheck → expo export --platform web
+```
+
+로컬에서 CI와 동일하게 확인:
+
+```bash
+npm run typecheck && npm run export:web
+```
+
+---
+
+## EAS 빌드 & Play Store
+
 ```bash
 npm install -g eas-cli
 eas login
 
-# 폰 직접 설치용 (.apk)
-eas build -p android --profile preview
-
-# 구글 플레이 스토어 제출용 (.aab)
-eas build -p android --profile production
+eas build -p android --profile preview      # APK (직접 설치)
+eas build -p android --profile production  # AAB (스토어)
 ```
+
+| 항목 | 값 |
+|------|-----|
+| Package name | `com.abraham.weathertodo` |
+| EAS projectId | `app.json` → `extra.eas.projectId` |
+
+**Play 제출 요약:** 개발자 계정 → production AAB 업로드 → Internal testing → 테스터 이메일 추가(Enter로 확정) → 초대 링크에서 Become a tester → Play Store 설치
+
+---
+
+## 프로젝트 구조
+
+```text
+weather-todo/
+├── app.json                      # 앱 메타 + Firebase (extra.firebase) + EAS
+├── firebaseConfig.js             # Firebase Auth / Firestore 초기화
+├── eas.json                      # preview(APK) / production(AAB)
+├── .github/workflows/ci.yml      # typecheck + web export
+├── package.json
+├── src/
+│   ├── app/
+│   │   ├── _layout.tsx           # Root Stack
+│   │   └── index.tsx             # Auth 분기 · 메모 CRUD
+│   ├── components/
+│   │   ├── AuthScreen.tsx        # 로그인 / 회원가입
+│   │   └── Weather.tsx           # 위치 · 날씨 · ℃/℉
+│   └── constants/
+│       └── colors.ts             # UI 팔레트
+└── README.md
+```
+
+---
+
+## 기능 요약
+
+- 이메일 로그인/회원가입 (유저별 메모 격리)
+- 현재 위치 날씨 + ℃ / ℉ 토글
+- Firestore 실시간 메모 추가·삭제

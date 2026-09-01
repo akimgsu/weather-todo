@@ -8,13 +8,13 @@
     "scheme": "weathertodo",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/images/icon.png"
     },
     "android": {
       "package": "com.abraham.weathertodo",
       "versionCode": 2,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0A4D68",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -30,7 +30,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#0A4D68",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
@@ -46,13 +46,13 @@
         "projectId": "21ef8f6d-79b8-4b61-92c0-965f0d4d5836"
       },
       "firebase": {
-        "apiKey": "AIzaSyDAZ7nZp2BRLXwqMA1UhtUYFCV4JxVJ6PY",
-        "authDomain": "my-test-app-d6bf1.firebaseapp.com",
-        "projectId": "my-test-app-d6bf1",
-        "storageBucket": "my-test-app-d6bf1.firebasestorage.app",
-        "messagingSenderId": "929172190792",
-        "appId": "1:929172190792:web:31f347c3761214ee96ca7d",
-        "measurementId": "G-BMR390PZ3Q"
+        "apiKey": "AIzaSyDUVeTDHmhhTdaO7hIZ7lWDlyFLqQ-8ssw",
+        "authDomain": "weather-todo-91348.firebaseapp.com",
+        "projectId": "weather-todo-91348",
+        "storageBucket": "weather-todo-91348.firebasestorage.app",
+        "messagingSenderId": "44511173045",
+        "appId": "1:44511173045:web:345dc08d3ae9dcf6eaa1fc",
+        "measurementId": "G-T3BG16L5NC"
       }
     }
   }

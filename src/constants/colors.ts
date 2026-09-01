@@ -1,0 +1,20 @@
+/** App palette — coastal desk, no purple SaaS defaults */
+export const colors = {
+  bg: '#E8F0F4',
+  bgSoft: '#DCE8EE',
+  surface: '#F7FBFC',
+  ink: '#102028',
+  muted: '#5C707A',
+  faint: '#8FA3AD',
+  border: '#C9D9E0',
+  accent: '#0D7377',
+  accentHover: '#0A5C5F',
+  accentSoft: '#D2ECEE',
+  weather: '#0A4D68',
+  weatherDeep: '#083B50',
+  weatherMist: 'rgba(255,255,255,0.16)',
+  weatherText: '#E8F4F8',
+  danger: '#B42318',
+  dangerSoft: '#FEE4E2',
+  white: '#FFFFFF',
+} as const;

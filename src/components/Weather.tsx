@@ -1,48 +1,83 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+  Dimensions,
+  Platform,
+} from 'react-native';
 import * as Location from 'expo-location';
 import { Feather } from '@expo/vector-icons';
+import { colors } from '../constants/colors';
 
 const { width } = Dimensions.get('window');
 
 export default function Weather() {
   const [weather, setWeather] = useState<any>(null);
-  const [city, setCity] = useState("Locating...");
-  const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [city, setCity] = useState('Locating...');
+  const [loading, setLoading] = useState(Platform.OS !== 'web');
+  const [errorMsg, setErrorMsg] = useState<string | null>(
+    Platform.OS === 'web' ? 'Tap to allow location for local weather.' : null
+  );
   const [isCelsius, setIsCelsius] = useState(true);
 
   useEffect(() => {
-    getLocationAndWeather();
+    // Native: request on mount. Web: wait for a user tap (browsers often block silent prompts).
+    if (Platform.OS !== 'web') {
+      getLocationAndWeather();
+    }
   }, []);
 
   const getLocationAndWeather = async () => {
+    setLoading(true);
+    setErrorMsg(null);
+    setWeather(null);
+
     try {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        setErrorMsg('Location permission required.');
+        setErrorMsg(
+          Platform.OS === 'web'
+            ? 'Location blocked. Click the lock/ⓘ next to the URL → allow Location, then retry.'
+            : 'Location permission required.'
+        );
         setLoading(false);
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
       const latitude = location.coords.latitude;
       const longitude = location.coords.longitude;
 
-      const geocode = await Location.reverseGeocodeAsync({ latitude, longitude });
-      if (geocode.length > 0) {
-        setCity(geocode[0].city || geocode[0].district || geocode[0].region || "Current Location");
+      try {
+        const geocode = await Location.reverseGeocodeAsync({ latitude, longitude });
+        if (geocode.length > 0) {
+          setCity(
+            geocode[0].city || geocode[0].district || geocode[0].region || 'Current Location'
+          );
+        } else {
+          setCity('Current Location');
+        }
+      } catch {
+        setCity('Current Location');
       }
 
-      const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
-      
+      const response = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
+      );
+
       if (!response.ok) throw new Error('API Error');
-      
+
       const data = await response.json();
       setWeather(data.current_weather);
+      setErrorMsg(null);
     } catch (error) {
       console.log('Error:', error);
-      setErrorMsg('Unable to fetch weather.');
+      setErrorMsg('Unable to fetch weather. Check connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -51,19 +86,14 @@ export default function Weather() {
   const getDisplayTemperature = () => {
     if (!weather) return '';
     const tempCelsius = weather.temperature;
-    if (isCelsius) {
-      return `${Math.round(tempCelsius)}°`;
-    } else {
-      const tempFahrenheit = (tempCelsius * 1.8 + 32);
-      return `${Math.round(tempFahrenheit)}°`;
-    }
+    if (isCelsius) return `${Math.round(tempCelsius)}`;
+    return `${Math.round(tempCelsius * 1.8 + 32)}`;
   };
 
-  // Weather code mapping to Feather icons
   const getWeatherIcon = (code: number): keyof typeof Feather.glyphMap => {
     if (code === 0 || code === 1) return 'sun';
     if (code === 2 || code === 3) return 'cloud';
-    if (code >= 45 && code <= 48) return 'cloud'; // fog
+    if (code >= 45 && code <= 48) return 'cloud';
     if (code >= 51 && code <= 67) return 'cloud-rain';
     if (code >= 71 && code <= 77) return 'cloud-snow';
     if (code >= 80 && code <= 82) return 'cloud-rain';
@@ -73,70 +103,83 @@ export default function Weather() {
 
   if (loading) {
     return (
-      <View style={[styles.card, styles.centerContent]}>
-        <ActivityIndicator color="#4F46E5" size="small" />
-        <Text style={styles.loadingText}>Fetching weather...</Text>
+      <View style={[styles.panel, styles.centerContent]}>
+        <ActivityIndicator color={colors.weatherText} size="small" />
+        <Text style={styles.loadingText}>Fetching weather…</Text>
       </View>
     );
   }
 
-  if (errorMsg) {
+  if (errorMsg || !weather) {
     return (
-      <View style={[styles.card, styles.centerContent]}>
-        <Feather name="alert-circle" size={24} color="#EF4444" />
-        <Text style={styles.errorText}>{errorMsg}</Text>
+      <View style={[styles.panel, styles.centerContent]}>
+        <Feather name="map-pin" size={22} color={colors.weatherText} />
+        <Text style={styles.errorText}>{errorMsg || 'No weather data'}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={getLocationAndWeather} activeOpacity={0.85}>
+          <Text style={styles.retryText}>Allow location</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={styles.card}>
-      {weather ? (
-        <View style={styles.content}>
-          <View style={styles.leftSection}>
-            <View style={styles.locationContainer}>
-              <Feather name="map-pin" size={14} color="#E0E7FF" style={styles.locationIcon} />
-              <Text style={styles.cityText} numberOfLines={1}>{city}</Text>
-            </View>
-            <View style={styles.tempContainer}>
-              <Text style={styles.tempText}>{getDisplayTemperature()}</Text>
-              <Text style={styles.unitText}>{isCelsius ? 'C' : 'F'}</Text>
-            </View>
+    <View style={styles.panel}>
+      <View style={styles.content}>
+        <View style={styles.leftSection}>
+          <View style={styles.locationRow}>
+            <Feather name="map-pin" size={13} color={colors.weatherText} />
+            <Text style={styles.cityText} numberOfLines={1}>
+              {city}
+            </Text>
           </View>
+          <View style={styles.tempRow}>
+            <Text style={styles.tempText}>{getDisplayTemperature()}</Text>
+            <Text style={styles.degree}>°</Text>
+            <Text style={styles.unitLabel}>{isCelsius ? 'C' : 'F'}</Text>
+          </View>
+        </View>
 
-          <View style={styles.rightSection}>
-            <Feather name={getWeatherIcon(weather.weathercode)} size={64} color="#FFFFFF" style={styles.weatherIcon} />
-            <TouchableOpacity 
-              style={styles.toggleButton} 
-              onPress={() => setIsCelsius(!isCelsius)}
-              activeOpacity={0.7}
+        <View style={styles.rightSection}>
+          <Feather
+            name={getWeatherIcon(weather.weathercode)}
+            size={48}
+            color={colors.white}
+            style={styles.weatherIcon}
+          />
+          <View style={styles.unitToggle}>
+            <TouchableOpacity
+              style={[styles.unitChip, isCelsius && styles.unitChipActive]}
+              onPress={() => setIsCelsius(true)}
+              activeOpacity={0.8}
             >
-              <Text style={styles.toggleText}>
-                Switch to {isCelsius ? '°F' : '°C'}
-              </Text>
+              <Text style={[styles.unitChipText, isCelsius && styles.unitChipTextActive]}>°C</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.unitChip, !isCelsius && styles.unitChipActive]}
+              onPress={() => setIsCelsius(false)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.unitChipText, !isCelsius && styles.unitChipTextActive]}>°F</Text>
             </TouchableOpacity>
           </View>
         </View>
-      ) : (
-        <Text style={styles.errorText}>No data available</Text>
-      )}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#4F46E5', // Indigo-600
-    borderRadius: 24,
-    padding: 24,
-    marginBottom: 24,
+  panel: {
+    backgroundColor: colors.weather,
+    borderRadius: 20,
+    paddingVertical: 22,
+    paddingHorizontal: 22,
+    marginBottom: 28,
     width: '100%',
-    shadowColor: '#4F46E5',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
-    elevation: 8,
-    minHeight: 140,
+    minHeight: 132,
+    overflow: 'hidden',
+    borderBottomWidth: 4,
+    borderBottomColor: colors.weatherDeep,
   },
   centerContent: {
     justifyContent: 'center',
@@ -154,72 +197,95 @@ const styles = StyleSheet.create({
   rightSection: {
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 12,
   },
-  locationContainer: {
+  locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  locationIcon: {
-    marginRight: 6,
+    gap: 6,
+    marginBottom: 6,
   },
   cityText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#E0E7FF',
-    maxWidth: width * 0.4,
+    color: colors.weatherText,
+    maxWidth: width * 0.42,
+    opacity: 0.9,
   },
-  tempContainer: {
+  tempRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
   tempText: {
     fontSize: 64,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    lineHeight: 72,
-    letterSpacing: -2,
-  },
-  unitText: {
-    fontSize: 24,
     fontWeight: '700',
-    color: '#E0E7FF',
-    marginTop: 8,
+    color: colors.white,
+    lineHeight: 68,
+    letterSpacing: -2.5,
+  },
+  degree: {
+    fontSize: 28,
+    fontWeight: '600',
+    color: colors.weatherText,
+    marginTop: 6,
+  },
+  unitLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.weatherText,
+    marginTop: 14,
+    marginLeft: 2,
   },
   weatherIcon: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 4,
-    marginBottom: 12,
+    marginBottom: 2,
   },
-  toggleButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+  unitToggle: {
+    flexDirection: 'row',
+    backgroundColor: colors.weatherMist,
+    borderRadius: 8,
+    padding: 2,
   },
-  toggleText: {
-    color: '#FFFFFF',
+  unitChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+  },
+  unitChipActive: {
+    backgroundColor: colors.white,
+  },
+  unitChipText: {
+    color: colors.weatherText,
     fontSize: 12,
     fontWeight: '700',
   },
+  unitChipTextActive: {
+    color: colors.weather,
+  },
   errorText: {
     fontSize: 14,
-    color: '#FEE2E2',
+    color: colors.weatherText,
     marginTop: 8,
     fontWeight: '500',
+    textAlign: 'center',
+    paddingHorizontal: 12,
+    lineHeight: 20,
   },
   loadingText: {
-    marginTop: 12,
-    color: '#E0E7FF',
+    marginTop: 10,
+    color: colors.weatherText,
     fontSize: 14,
     fontWeight: '500',
-  }
+  },
+  retryButton: {
+    marginTop: 14,
+    backgroundColor: colors.white,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  retryText: {
+    color: colors.weather,
+    fontWeight: '700',
+    fontSize: 14,
+  },
 });
